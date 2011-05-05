@@ -94,9 +94,9 @@
                         base.checkbox.prop('checked', false);
                     var val = ancien[base.name].value;
                     $.each(val, function(i,v) {
-                        var input = base.$el.find("[name="+v.name+"]");
+                        var cleanName = v.name.replace(/\]/g, "\\\]").replace(/\[/g, "\\\["), input = base.$el.find("[name="+cleanName+"]");
                         if(input.is(':checkbox') || input.is(':radio'))
-                            base.$el.find('[name='+v.name+'][value=' + v.value + ']').prop('checked', true);
+                            base.$el.find('[name='+cleanName+'][value=' + v.value + ']').prop('checked', true);
                         else
                             input.val(v.value);
                     });
