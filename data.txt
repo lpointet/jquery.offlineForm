@@ -1,0 +1,3 @@
+input_text => test_hors
+input_email => couette_hors@couet.fr
+input_checkbox => 1
