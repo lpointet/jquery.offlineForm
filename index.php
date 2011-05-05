@@ -5,6 +5,8 @@ define('CFG_SEP', ' => ');
 if(!empty($_POST)) {
     $f = fopen(CFG_FILE, 'w');
     foreach($_POST as $k => $v) {
+        if(is_array($v))
+            $v = 'ARRAY:'.implode(',',$v);
         fwrite($f, $k.CFG_SEP.str_replace("\n", '', nl2br(str_replace("\r", '', $v)))."\n");
     }
     fclose($f);
@@ -21,16 +23,21 @@ $data = array(
     'input_radiobox' => '',
     'textarea' => '',
     'select' => '',
+    'select_multiple' => array(),
 );
 
 if(file_exists(CFG_FILE)) {
     $file = file(CFG_FILE);
     foreach($file as $ligne) {
+        $ligne = trim($ligne);
         $tmp = explode(CFG_SEP, $ligne);
-        $data[$tmp[0]] = preg_replace('/<br(\s)*(\/)?>/', "\n", $tmp[1]);
+        $tmp[1] = preg_replace('/<br(\s)*(\/)?>/', "\n", $tmp[1]);
+        $r = strpos($tmp[1], 'ARRAY:');
+        if(!$r && $r !== FALSE)
+            $tmp[1] = explode(',', str_replace('ARRAY:', '', $tmp[1]));
+        $data[$tmp[0]] = $tmp[1];
     }
 }
-
 ?>
 <!DOCTYPE html>
 <html manifest="manifest.appcache">
@@ -73,6 +80,7 @@ $(function() {
     <input type="radio" name="input_radiobox" value="1" <?php echo $data['input_radiobox'] == 1?'checked':''; ?>/><input type="radio" name="input_radiobox" value="2" <?php echo $data['input_radiobox'] == 2?'checked':''; ?>/><input type="radio" name="input_radiobox" value="3" <?php echo $data['input_radiobox'] == 3?'checked':''; ?>/><br/>
     <textarea name="textarea"><?php echo $data['textarea']; ?></textarea><br/>
     <select name="select"><option value="">Select</option><option value="1" <?php echo $data['select'] == 1?'selected':''; ?>>Option 1</option><option value="2" <?php echo $data['select'] == 2?'selected':''; ?>>Option 2</option></select><br/>
+    <select name="select_multiple[]" multiple><option value="1" <?php echo in_array(1, $data['select_multiple'])?'selected':''; ?>>Option 1</option><option value="2" <?php echo in_array(2, $data['select_multiple'])?'selected':''; ?>>Option 2</option></select><br/>
     <input type="submit" value="Envoyer" />
 </form>
 </body>
