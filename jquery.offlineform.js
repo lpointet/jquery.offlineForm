@@ -95,7 +95,7 @@
                     var val = ancien[base.name].value;
                     $.each(val, function(i,v) {
                         var input = base.$el.find("[name="+v.name+"]");
-                        if(input.is(':checkbox'))
+                        if(input.is(':checkbox') || input.is(':radio'))
                             base.$el.find('[name='+v.name+'][value=' + v.value + ']').prop('checked', true);
                         else
                             input.val(v.value);
