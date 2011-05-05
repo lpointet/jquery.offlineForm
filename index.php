@@ -18,6 +18,7 @@ $data = array(
     'input_text' => '',
     'input_email' => '',
     'input_checkbox' => '',
+    'input_radiobox' => '',
 );
 
 if(file_exists(CFG_FILE)) {
@@ -67,6 +68,7 @@ $(function() {
     <input type="text" name="input_text" value="<?php echo $data['input_text']; ?>" /><br/>
     <input type="email" name="input_email" value="<?php echo $data['input_email']; ?>" /><br/>
     <input type="checkbox" name="input_checkbox" value="1" <?php echo $data['input_checkbox']?'checked':''; ?>/><br/>
+    <input type="radio" name="input_radiobox" value="1" <?php echo $data['input_radiobox'] == 1?'checked':''; ?>/><input type="radio" name="input_radiobox" value="2" <?php echo $data['input_radiobox'] == 2?'checked':''; ?>/><input type="radio" name="input_radiobox" value="3" <?php echo $data['input_radiobox'] == 3?'checked':''; ?>/><br/>
     <input type="submit" value="Envoyer" />
 </form>
 </body>
