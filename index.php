@@ -20,6 +20,7 @@ $data = array(
     'input_checkbox' => '',
     'input_radiobox' => '',
     'textarea' => '',
+    'select' => '',
 );
 
 if(file_exists(CFG_FILE)) {
@@ -71,6 +72,7 @@ $(function() {
     <input type="checkbox" name="input_checkbox" value="1" <?php echo $data['input_checkbox']?'checked':''; ?>/><br/>
     <input type="radio" name="input_radiobox" value="1" <?php echo $data['input_radiobox'] == 1?'checked':''; ?>/><input type="radio" name="input_radiobox" value="2" <?php echo $data['input_radiobox'] == 2?'checked':''; ?>/><input type="radio" name="input_radiobox" value="3" <?php echo $data['input_radiobox'] == 3?'checked':''; ?>/><br/>
     <textarea name="textarea"><?php echo $data['textarea']; ?></textarea><br/>
+    <select name="select"><option value="">Select</option><option value="1" <?php echo $data['select'] == 1?'selected':''; ?>>Option 1</option><option value="2" <?php echo $data['select'] == 2?'selected':''; ?>>Option 2</option></select><br/>
     <input type="submit" value="Envoyer" />
 </form>
 </body>
