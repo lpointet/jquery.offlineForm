@@ -18,6 +18,7 @@
             base.action = base.$el.attr("action") || window.location.href,
             base.method = base.$el.attr("method") || "post",
             base.document = $(document);
+            base.checkbox = base.$el.find('[type=checkbox]');
 
             // Handle submit event
             base.$el.submit(base.handleOfflineForm);
@@ -87,9 +88,15 @@
             if(ancien.length > 2) {
                 ancien = JSON.parse(ancien);
                 if(ancien[base.name]) {
+                    if(base.checkbox.length)
+                        base.checkbox.prop('checked', false);
                     var val = ancien[base.name].value;
                     $.each(val, function(i,v) {
-                        base.$el.find("[name="+v.name+"]").val(v.value);
+                        var input = base.$el.find("[name="+v.name+"]");
+                        if(input.is(':checkbox'))
+                            base.$el.find('[name='+v.name+'][value=' + v.value + ']').prop('checked', true);
+                        else
+                            input.val(v.value);
                     });
                 }
             }
