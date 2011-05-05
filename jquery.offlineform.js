@@ -72,6 +72,8 @@
                         $.ajax({type:base.method, url:base.action, data:v.value, error:function() {
                             new_formulaire[i] = v;
                         }});
+                        // Retrieve and replace one last time data transmitted
+                        base.handleOfflineData();
                     }
                     else
                         new_formulaire[i] = v;
