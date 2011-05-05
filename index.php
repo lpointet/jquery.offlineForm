@@ -5,7 +5,7 @@ define('CFG_SEP', ' => ');
 if(!empty($_POST)) {
     $f = fopen(CFG_FILE, 'w');
     foreach($_POST as $k => $v) {
-        fwrite($f, $k.CFG_SEP.$v."\n");
+        fwrite($f, $k.CFG_SEP.str_replace("\n", '', nl2br(str_replace("\r", '', $v)))."\n");
     }
     fclose($f);
     
@@ -19,13 +19,14 @@ $data = array(
     'input_email' => '',
     'input_checkbox' => '',
     'input_radiobox' => '',
+    'textarea' => '',
 );
 
 if(file_exists(CFG_FILE)) {
     $file = file(CFG_FILE);
     foreach($file as $ligne) {
         $tmp = explode(CFG_SEP, $ligne);
-        $data[$tmp[0]] = $tmp[1];
+        $data[$tmp[0]] = preg_replace('/<br(\s)*(\/)?>/', "\n", $tmp[1]);
     }
 }
 
@@ -69,6 +70,7 @@ $(function() {
     <input type="email" name="input_email" value="<?php echo $data['input_email']; ?>" /><br/>
     <input type="checkbox" name="input_checkbox" value="1" <?php echo $data['input_checkbox']?'checked':''; ?>/><br/>
     <input type="radio" name="input_radiobox" value="1" <?php echo $data['input_radiobox'] == 1?'checked':''; ?>/><input type="radio" name="input_radiobox" value="2" <?php echo $data['input_radiobox'] == 2?'checked':''; ?>/><input type="radio" name="input_radiobox" value="3" <?php echo $data['input_radiobox'] == 3?'checked':''; ?>/><br/>
+    <textarea name="textarea"><?php echo $data['textarea']; ?></textarea><br/>
     <input type="submit" value="Envoyer" />
 </form>
 </body>
