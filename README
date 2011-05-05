@@ -1,4 +1,4 @@
-Plugin to handle form submission on an offline page (cached with manifest for example, or basically just for someone who lost connectivity during his submission)
+Plugin to handle form submission on an offline page (cached with manifest for example, or basically just for someone who lost connectivity during his submission).
 
 Functionnalities :
 - Only supports browsers with window.navigator.onLine
