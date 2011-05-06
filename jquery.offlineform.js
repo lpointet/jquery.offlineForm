@@ -35,10 +35,9 @@
         // Callback for submit event
         base.handleOfflineForm = function(e){
             if(!window.navigator.onLine) {
-                var ancien = localStorage.getItem('form_to_submit') || '{}';
+                var ancien = base.getOfflineData(true);
 
                 // Save form data in localStorage
-                ancien = JSON.parse(ancien);
                 ancien[base.name] = {'value' : base.$el.serializeArray(), 'action' : base.action};
                 base.set_form_to_submit(ancien);
 
@@ -62,10 +61,8 @@
 
         // Function to submit data
         base.handleDataToSubmit = function(){
-            var formulaire = localStorage.getItem('form_to_submit') || '{}';
-            // Does localStorage store anything ?
-            if(formulaire.length > 2) {
-                formulaire = JSON.parse(formulaire);
+            var formulaire;
+            if(formulaire = base.getOfflineData()) {
                 var new_formulaire = {};
                 $.each(formulaire, function(i, v) {
                     // Send form to server
@@ -87,9 +84,8 @@
 
         // Function to recover offline data (in case we are viewing a cached page)
         base.handleOfflineData = function(){
-            var ancien = localStorage.getItem('form_to_submit') || '{}';
-            if(ancien.length > 2) {
-                ancien = JSON.parse(ancien);
+            var ancien;
+            if(ancien = base.getOfflineData()) {
                 if(ancien[base.name]) {
                     if(base.checkbox.length)
                         base.checkbox.prop('checked', false);
@@ -108,6 +104,18 @@
                 }
             }
         };
+
+        // Function to retrieve data from localStorage
+        base.getOfflineData = function(setDefault) {
+            var data = localStorage.getItem('form_to_submit') || '{}';
+            // Does localStorage store anything ?
+            if(data.length > 2 || setDefault)
+                data = JSON.parse(data);
+            else
+                data = false;
+
+            return data;
+        }
 
         // Run initializer
         base.init();

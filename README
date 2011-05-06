@@ -6,7 +6,12 @@ Functionnalities :
 - For sites using cache:manifest, replace form values with data submitted previously until they are sent back to the server
 
 Usage examples :
+
+------- Basic example ----------
+
 $('form').offlineForm();
+
+------- With options -----------
 
 $('form').bind('dataSubmitted', function(e) {
     console.log(this);
@@ -17,6 +22,17 @@ $('form').bind('dataSubmitted', function(e) {
 }).offlineForm({
     dataSubmittedEvent: 'dataSubmitted',
     offlineSubmitEvent: 'formValidated'
+});
+
+----- With default options -----
+
+$.offlineForm.defaultOptions = {
+    dataSubmittedEvent: 'dataSubmitted',
+    offlineSubmitEvent: 'formValidated'
+};
+$('#form1').offlineForm();
+$('#form2').offlineForm({
+    dataSubmittedEvent: 'surchargedEvent'
 });
 
 Note: [x] developpement | [] beta | [] stable
