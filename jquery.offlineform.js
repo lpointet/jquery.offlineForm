@@ -19,6 +19,7 @@
             base.method = base.$el.attr("method") || "post",
             base.document = $(document);
             base.checkbox = base.$el.find('[type=checkbox]');
+            base.multipleSelect = base.$el.find('select[multiple]');
 
             // Handle submit event
             base.$el.submit(base.handleOfflineForm);
@@ -92,11 +93,15 @@
                 if(ancien[base.name]) {
                     if(base.checkbox.length)
                         base.checkbox.prop('checked', false);
+                    if(base.multipleSelect.length)
+                        base.multipleSelect.find('option').prop('selected', false);
                     var val = ancien[base.name].value;
                     $.each(val, function(i,v) {
                         var cleanName = v.name.replace(/\]/g, "\\\]").replace(/\[/g, "\\\["), input = base.$el.find("[name="+cleanName+"]");
                         if(input.is(':checkbox') || input.is(':radio'))
                             base.$el.find('[name='+cleanName+'][value=' + v.value + ']').prop('checked', true);
+                        else if(input.is('select') && input.prop('multiple'))
+                            input.find('[value=' + v.value + ']').prop('selected', true);
                         else
                             input.val(v.value);
                     });
