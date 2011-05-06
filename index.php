@@ -1,9 +1,11 @@
 <?php
 define('CFG_FILE', 'data.txt');
+define('CFG_FILE_DOUBLE', 'data_double.txt');
 define('CFG_SEP', ' => ');
 
 if(!empty($_POST)) {
-    $f = fopen(CFG_FILE, 'w');
+    $filename = !empty($_POST['double'])?CFG_FILE_DOUBLE:CFG_FILE;
+    $f = fopen($filename, 'w');
     foreach($_POST as $k => $v) {
         if(is_array($v))
             $v = 'ARRAY:'.implode(',',$v);
@@ -25,6 +27,15 @@ $data = array(
     'select' => '',
     'select_multiple' => array(),
 );
+$data_double = array(
+    'input_text' => '',
+    'input_email' => '',
+    'input_checkbox' => '',
+    'input_radiobox' => '',
+    'textarea' => '',
+    'select' => '',
+    'select_multiple' => array(),
+);
 
 if(file_exists(CFG_FILE)) {
     $file = file(CFG_FILE);
@@ -36,6 +47,19 @@ if(file_exists(CFG_FILE)) {
         if(!$r && $r !== FALSE)
             $tmp[1] = explode(',', str_replace('ARRAY:', '', $tmp[1]));
         $data[$tmp[0]] = $tmp[1];
+    }
+}
+
+if(file_exists(CFG_FILE_DOUBLE)) {
+    $file = file(CFG_FILE_DOUBLE);
+    foreach($file as $ligne) {
+        $ligne = trim($ligne);
+        $tmp = explode(CFG_SEP, $ligne);
+        $tmp[1] = preg_replace('/<br(\s)*(\/)?>/', "\n", $tmp[1]);
+        $r = strpos($tmp[1], 'ARRAY:');
+        if(!$r && $r !== FALSE)
+            $tmp[1] = explode(',', str_replace('ARRAY:', '', $tmp[1]));
+        $data_double[$tmp[0]] = $tmp[1];
     }
 }
 ?>
@@ -81,6 +105,17 @@ $(function() {
     <textarea name="textarea"><?php echo $data['textarea']; ?></textarea><br/>
     <select name="select"><option value="">Select</option><option value="1" <?php echo $data['select'] == 1?'selected':''; ?>>Option 1</option><option value="2" <?php echo $data['select'] == 2?'selected':''; ?>>Option 2</option></select><br/>
     <select name="select_multiple[]" multiple><option value="1" <?php echo in_array(1, $data['select_multiple'])?'selected':''; ?>>Option 1</option><option value="2" <?php echo in_array(2, $data['select_multiple'])?'selected':''; ?>>Option 2</option></select><br/>
+    <input type="submit" value="Envoyer" />
+</form>
+<form action="" method="post" id="form_test_double">
+    <input type="text" name="input_text" value="<?php echo $data_double['input_text']; ?>" /><br/>
+    <input type="email" name="input_email" value="<?php echo $data_double['input_email']; ?>" /><br/>
+    <input type="checkbox" name="input_checkbox" value="1" <?php echo $data_double['input_checkbox']?'checked':''; ?>/><br/>
+    <input type="radio" name="input_radiobox" value="1" <?php echo $data_double['input_radiobox'] == 1?'checked':''; ?>/><input type="radio" name="input_radiobox" value="2" <?php echo $data_double['input_radiobox'] == 2?'checked':''; ?>/><input type="radio" name="input_radiobox" value="3" <?php echo $data_double['input_radiobox'] == 3?'checked':''; ?>/><br/>
+    <textarea name="textarea"><?php echo $data_double['textarea']; ?></textarea><br/>
+    <select name="select"><option value="">Select</option><option value="1" <?php echo $data_double['select'] == 1?'selected':''; ?>>Option 1</option><option value="2" <?php echo $data_double['select'] == 2?'selected':''; ?>>Option 2</option></select><br/>
+    <select name="select_multiple[]" multiple><option value="1" <?php echo in_array(1, $data_double['select_multiple'])?'selected':''; ?>>Option 1</option><option value="2" <?php echo in_array(2, $data_double['select_multiple'])?'selected':''; ?>>Option 2</option></select><br/>
+    <input type="hidden" name="double" value="1" />
     <input type="submit" value="Envoyer" />
 </form>
 </body>

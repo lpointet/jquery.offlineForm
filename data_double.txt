@@ -1,0 +1,7 @@
+input_text => double_hors
+input_email => dou@ble.fr
+input_checkbox => 1
+input_radiobox => 3
+textarea => rien.<br />Non plus...
+select => 2
+double => 1
