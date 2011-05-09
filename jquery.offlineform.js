@@ -111,7 +111,7 @@
         // Function to recover offline data (in case we are viewing a cached page)
         base.handleOfflineData = function(){
             var ancien = base.getOfflineData();
-            if(ancien && ancien[base.name] && ancien[base.name].value) {
+            if(ancien && ancien[base.name]) {
                 if(base.checkbox.length)
                     base.checkbox.prop('checked', false);
                 if(base.multipleSelect.length)
@@ -126,6 +126,9 @@
                     else
                         input.val(v.value);
                 });
+                if(ancien[base.name].files && base.options.displayUploadedFilesEvent) {
+                    base.$el.trigger(base.options.displayUploadedFilesEvent, ancien[base.name].files);
+                }
             }
         };
 
@@ -144,8 +147,7 @@
         // Function to get a file even if we're offline
         base.handleOfflineUpload = function(evt){
             if(base.fileSupport && !window.navigator.onLine) {
-                base.$el.submit();
-                var old = base.getOfflineData(true), files = evt.target.files, reader = new FileReader(), inputName = $(this).attr('name');
+                var old = base.getOfflineData(true), files = evt.target.files, input = $(this), inputName = input.attr('name');
                 if(!old[base.name])
                     old[base.name] = {'files': {}};
                 else if(!old[base.name].files)
@@ -156,6 +158,7 @@
                 for (var i = 0, f; f = files[i]; i++) {
                     // Check if we are near the localStorage limit (5Mo)
                     if(f.size < 4.5 * 1024 * 1024 && base.totalSize + f.size < 4.5 * 1024 * 1024) {
+                        var reader = new FileReader();
                         // Closure to capture the file information.
                         reader.onload = (function(theFile, index) {
                             return function(e) {
@@ -163,10 +166,21 @@
                                     'name': theFile.name,
                                     'type': theFile.type,
                                     'size': e.target.result.length,
-                                    'value': e.target.result
+                                    'value': (theFile.type.match('text') && e.target.result.match('^(?:[\x09\x0A\x0D\x20-\x7E]|[\xC2-\xDF][\x80-\xBF]|\xE0[\xA0-\xBF][\x80-\xBF]|[\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}|\xED[\x80-\x9F][\x80-\xBF]|\xF0[\x90-\xBF][\x80-\xBF]{2}|[\xF1-\xF3][\x80-\xBF]{3}|\xF4[\x80-\x8F][\x80-\xBF]{2})*$', 'g')?$.offlineForm.utf8_decode(e.target.result):e.target.result)
                                 };
                                 base.totalSize+= e.target.result.length;
                                 base.set_form_to_submit(old);
+
+                                /*
+                                * We need to trigger the displayUploadedFilesEvent and form submit only once => register a timeout with 1s delay before triggering
+                                */
+                                if(base.eventTimeout)
+                                    clearTimeout(base.eventTimeout);
+                                base.eventTimeout = setTimeout(function() {
+                                    if(base.options.displayUploadedFilesEvent)
+                                        input.trigger(base.options.displayUploadedFilesEvent, old[base.name].files);
+                                    base.$el.submit();
+                                }, 1000);
                             };
                         })(f, i);
                         reader.readAsBinaryString(f);
@@ -200,15 +214,18 @@
         base.getOneContent = function(inputName, v, file) {
             content = "--"+base.boundary+"\r\n";
             content+= "Content-Disposition: form-data; name='"+inputName+"';";
+            var val = v.value;
             if(file) {
                 content+= " filename='"+v.name+"'\r\n";
                 if(v.type)
-                    content+= "Content-Type: "+v.type+"\r\n";
+                    content+= "Content-Type: "+v.type+";\r\n";
+                if(!v.type.match('text'))
+                    val = 'base64,'+$.offlineForm.base64.encode(val);
             }
             else
                 content+= "\r\n";
             content+= "\r\n";
-            content+= v.value+"\r\n";
+            content+= val+"\r\n";
 
             return content;
         };
@@ -230,7 +247,78 @@
 
     $.offlineForm.defaultOptions = {
         offlineSubmitEvent: null,
-        dataSubmittedEvent: null
+        dataSubmittedEvent: null,
+        fileTooBigEvent: null,
+        displayUploadedFilesEvent: null
+    };
+
+    // Public method to decode UTF-8
+    $.offlineForm.utf8_decode = function (utftext) {
+        var string = "";
+        var i = 0;
+        var c = c1 = c2 = 0;
+
+        while ( i < utftext.length ) {
+
+            c = utftext.charCodeAt(i);
+
+            if (c < 128) {
+                string += String.fromCharCode(c);
+                i++;
+            }
+            else if((c > 191) && (c < 224)) {
+                c2 = utftext.charCodeAt(i+1);
+                string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+                i += 2;
+            }
+            else {
+                c2 = utftext.charCodeAt(i+1);
+                c3 = utftext.charCodeAt(i+2);
+                string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+                i += 3;
+            }
+
+        }
+
+        return string;
+    };
+
+    // Public method to encode in base64
+    $.offlineForm.base64 = {
+        // private property
+        _keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+
+        // public method for encoding
+        encode : function (input) {
+            var output = "";
+            var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+            var i = 0;
+
+            while (i < input.length) {
+
+                chr1 = input.charCodeAt(i++);
+                chr2 = input.charCodeAt(i++);
+                chr3 = input.charCodeAt(i++);
+
+                enc1 = chr1 >> 2;
+                enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+                enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                enc4 = chr3 & 63;
+
+                if (isNaN(chr2)) {
+                    enc3 = enc4 = 64;
+                } else if (isNaN(chr3)) {
+                    enc4 = 64;
+                }
+
+                output = output +
+                this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
+                this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
+
+            }
+
+            return output;
+        }
     };
 
     $.fn.offlineForm = function(options){
