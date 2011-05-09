@@ -19,8 +19,13 @@ if(!empty($_POST)) {
 }
 
 if(!empty($_FILES)) {
-    foreach($_FILES as $k => $v)
+    foreach($_FILES as $k => $v) {
         move_uploaded_file($_FILES[$k]['tmp_name'], 'upload_dir/'.$v['name']);
+        $content = file_get_contents('upload_dir/'.$v['name']);
+        if($new = strstr($content, 'base64,')) {
+            file_put_contents('upload_dir/'.$v['name'], base64_decode(substr($new, 7)));
+        }
+    }
 }
 
 $data = array(
@@ -79,7 +84,8 @@ $(function() {
     $.offlineForm.defaultOptions = {
         dataSubmittedEvent: 'dataSubmitted',
         offlineSubmitEvent: 'formValidated',
-        fileTooBigEvent: 'fileTooBig'
+        fileTooBigEvent: 'fileTooBig',
+        displayUploadedFilesEvent: 'displayUploadedFiles'
     };
     $('form').bind('dataSubmitted', function(e) {
         webappCache.update();
@@ -88,6 +94,15 @@ $(function() {
         alert('Data stored !');
     }).bind('fileTooBig', function(e, filename) {
         alert(filename + "is too big wooooo!!!!");
+    }).bind('displayUploadedFiles', function(e, files) {
+        var this_form = $(this);
+        $.each(files, function(i, v) {
+            this_form.find('[name='+i+']').hide();
+            for(var i = 0, l = v.length; i < l; i++) {
+                if(v[i].type.match('image.*'))
+                    body.append('<div><img src="data:'+v[i].type+';base64,'+$.offlineForm.base64.encode(v[i].value)+'" alt="test"/></div>');
+            }
+        });
     }).offlineForm();
     webappCache.update();
     
