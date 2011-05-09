@@ -72,13 +72,13 @@
                         }});
                         // Retrieve and replace one last time data transmitted
                         base.handleOfflineData();
+                        if(base.options.dataSubmittedEvent)
+                            base.$el.trigger(base.options.dataSubmittedEvent);
                     }
                     else
                         new_formulaire[i] = v;
                 });
                 base.set_form_to_submit(new_formulaire);
-                if(base.options.dataSubmittedEvent)
-                    base.$el.trigger(base.options.dataSubmittedEvent);
             }
         };
 
