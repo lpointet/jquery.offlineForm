@@ -18,6 +18,11 @@ if(!empty($_POST)) {
     file_put_contents('manifest.appcache', str_replace('# Version '.$match[1], '# Version '.++$match[1], $manifest));
 }
 
+if(!empty($_FILES)) {
+    foreach($_FILES as $k => $v)
+        move_uploaded_file($_FILES[$k]['tmp_name'], 'upload_dir/'.$v['name']);
+}
+
 $data = array(
     'input_text' => '',
     'input_email' => '',
@@ -71,15 +76,19 @@ if(file_exists(CFG_FILE_DOUBLE)) {
 <script>
 $(function() {
     var webappCache = window.applicationCache, body = $('body');
+    $.offlineForm.defaultOptions = {
+        dataSubmittedEvent: 'dataSubmitted',
+        offlineSubmitEvent: 'formValidated',
+        fileTooBigEvent: 'fileTooBig'
+    };
     $('form').bind('dataSubmitted', function(e) {
         webappCache.update();
         alert('Data submitted !');
     }).bind('formValidated', function(e) {
         alert('Data stored !');
-    }).offlineForm({
-        dataSubmittedEvent: 'dataSubmitted',
-        offlineSubmitEvent: 'formValidated'
-    });
+    }).bind('fileTooBig', function(e, filename) {
+        alert(filename + "is too big wooooo!!!!");
+    }).offlineForm();
     webappCache.update();
     
     function updateCache() {
@@ -107,7 +116,7 @@ $(function() {
     <select name="select_multiple[]" multiple><option value="1" <?php echo in_array(1, $data['select_multiple'])?'selected':''; ?>>Option 1</option><option value="2" <?php echo in_array(2, $data['select_multiple'])?'selected':''; ?>>Option 2</option></select><br/>
     <input type="submit" value="Envoyer" />
 </form>
-<form action="" method="post" id="form_test_double">
+<form action="" method="post" id="form_test_double" enctype="multipart/form-data">
     <input type="text" name="input_text" value="<?php echo $data_double['input_text']; ?>" /><br/>
     <input type="email" name="input_email" value="<?php echo $data_double['input_email']; ?>" /><br/>
     <input type="checkbox" name="input_checkbox" value="1" <?php echo $data_double['input_checkbox']?'checked':''; ?>/><br/>
@@ -115,6 +124,7 @@ $(function() {
     <textarea name="textarea"><?php echo $data_double['textarea']; ?></textarea><br/>
     <select name="select"><option value="">Select</option><option value="1" <?php echo $data_double['select'] == 1?'selected':''; ?>>Option 1</option><option value="2" <?php echo $data_double['select'] == 2?'selected':''; ?>>Option 2</option></select><br/>
     <select name="select_multiple[]" multiple><option value="1" <?php echo in_array(1, $data_double['select_multiple'])?'selected':''; ?>>Option 1</option><option value="2" <?php echo in_array(2, $data_double['select_multiple'])?'selected':''; ?>>Option 2</option></select><br/>
+    <input type="file" name="input_file" /><br/>
     <input type="hidden" name="double" value="1" />
     <input type="submit" value="Envoyer" />
 </form>
