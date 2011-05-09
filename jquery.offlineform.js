@@ -15,8 +15,8 @@
             base.options = $.extend({},$.offlineForm.defaultOptions, options);
 
             base.name = base.$el.attr("id");
-            base.action = base.$el.attr("action") || window.location.href,
-            base.method = base.$el.attr("method") || "post",
+            base.action = base.$el.attr("action") || window.location.href;
+            base.method = base.$el.attr("method") || "post";
             base.document = $(document);
             base.checkbox = base.$el.find('[type=checkbox]');
             base.multipleSelect = base.$el.find('select[multiple]');
@@ -57,12 +57,12 @@
         // Function to store data
         base.set_form_to_submit = function(value) {
             localStorage.setItem('form_to_submit', JSON.stringify(value));
-        }
+        };
 
         // Function to submit data
         base.handleDataToSubmit = function(){
-            var formulaire;
-            if(formulaire = base.getOfflineData()) {
+            var formulaire = base.getOfflineData();
+            if(formulaire) {
                 var new_formulaire = {};
                 $.each(formulaire, function(i, v) {
                     // Send form to server
@@ -84,24 +84,22 @@
 
         // Function to recover offline data (in case we are viewing a cached page)
         base.handleOfflineData = function(){
-            var ancien;
-            if(ancien = base.getOfflineData()) {
-                if(ancien[base.name]) {
-                    if(base.checkbox.length)
-                        base.checkbox.prop('checked', false);
-                    if(base.multipleSelect.length)
-                        base.multipleSelect.find('option').prop('selected', false);
-                    var val = ancien[base.name].value;
-                    $.each(val, function(i,v) {
-                        var cleanName = v.name.replace(/\]/g, "\\\]").replace(/\[/g, "\\\["), input = base.$el.find("[name="+cleanName+"]");
-                        if(input.is(':checkbox') || input.is(':radio'))
-                            base.$el.find('[name='+cleanName+'][value=' + v.value + ']').prop('checked', true);
-                        else if(input.is('select') && input.prop('multiple'))
-                            input.find('[value=' + v.value + ']').prop('selected', true);
-                        else
-                            input.val(v.value);
-                    });
-                }
+            var ancien = base.getOfflineData();
+            if(ancien && ancien[base.name]) {
+                if(base.checkbox.length)
+                    base.checkbox.prop('checked', false);
+                if(base.multipleSelect.length)
+                    base.multipleSelect.find('option').prop('selected', false);
+                var val = ancien[base.name].value;
+                $.each(val, function(i,v) {
+                    var cleanName = v.name.replace(/\]/g, "\\\]").replace(/\[/g, "\\\["), input = base.$el.find("[name="+cleanName+"]");
+                    if(input.is(':checkbox') || input.is(':radio'))
+                        base.$el.find('[name='+cleanName+'][value=' + v.value + ']').prop('checked', true);
+                    else if(input.is('select') && input.prop('multiple'))
+                        input.find('[value=' + v.value + ']').prop('selected', true);
+                    else
+                        input.val(v.value);
+                });
             }
         };
 
@@ -115,7 +113,7 @@
                 data = false;
 
             return data;
-        }
+        };
 
         // Run initializer
         base.init();
