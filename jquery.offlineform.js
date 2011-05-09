@@ -20,9 +20,15 @@
             base.document = $(document);
             base.checkbox = base.$el.find('[type=checkbox]');
             base.multipleSelect = base.$el.find('select[multiple]');
+            base.fileInput = base.$el.find('input[type=file]');
+            base.fileSupport = window.File && window.FileReader && window.FileList;
+            base.totalSize = base.getTotalSize();
 
             // Handle submit event
             base.$el.submit(base.handleOfflineForm);
+
+            // Handle upload input types
+            base.fileInput.change(base.handleOfflineUpload);
 
             // If we are online => submit registered values
             if(window.navigator.onLine)
@@ -38,7 +44,9 @@
                 var ancien = base.getOfflineData(true);
 
                 // Save form data in localStorage
-                ancien[base.name] = {'value' : base.$el.serializeArray(), 'action' : base.action};
+                ancien[base.name] = ancien[base.name] || {};
+                ancien[base.name].value = base.$el.serializeArray();
+                ancien[base.name].action = base.action;
                 base.set_form_to_submit(ancien);
 
                 // Trigger event
@@ -69,9 +77,11 @@
                     if(i == base.name) {
                         // Get the content of the request
                         base.boundary = new Date().getTime();
-                        var content = base.getMultipartContent(v.value);
+                        var content = '';
+                        if(v.value)
+                            content+= base.getMultipartContent(v.value);
                         // Check if this form has some files to upload
-                        if(v.files && v.files.length)
+                        if(v.files)
                             content+= base.getMultipartContent(v.files, true);
                         content+= "--"+base.boundary+"--\r\n";
 
@@ -101,7 +111,7 @@
         // Function to recover offline data (in case we are viewing a cached page)
         base.handleOfflineData = function(){
             var ancien = base.getOfflineData();
-            if(ancien && ancien[base.name]) {
+            if(ancien && ancien[base.name] && ancien[base.name].value) {
                 if(base.checkbox.length)
                     base.checkbox.prop('checked', false);
                 if(base.multipleSelect.length)
@@ -131,23 +141,87 @@
             return data;
         };
 
+        // Function to get a file even if we're offline
+        base.handleOfflineUpload = function(evt){
+            if(base.fileSupport && !window.navigator.onLine) {
+                base.$el.submit();
+                var old = base.getOfflineData(true), files = evt.target.files, reader = new FileReader(), inputName = $(this).attr('name');
+                if(!old[base.name])
+                    old[base.name] = {'files': {}};
+                else if(!old[base.name].files)
+                    old[base.name].files = {};
+
+                old[base.name].files[inputName] = [];
+
+                for (var i = 0, f; f = files[i]; i++) {
+                    // Check if we are near the localStorage limit (5Mo)
+                    if(f.size < 4.5 * 1024 * 1024 && base.totalSize + f.size < 4.5 * 1024 * 1024) {
+                        // Closure to capture the file information.
+                        reader.onload = (function(theFile, index) {
+                            return function(e) {
+                                old[base.name].files[inputName][index] = {
+                                    'name': theFile.name,
+                                    'type': theFile.type,
+                                    'size': e.target.result.length,
+                                    'value': e.target.result
+                                };
+                                base.totalSize+= e.target.result.length;
+                                base.set_form_to_submit(old);
+                            };
+                        })(f, i);
+                        reader.readAsBinaryString(f);
+                    }
+                    else if(base.options.fileTooBigEvent)
+                        base.$el.trigger(base.options.fileTooBigEvent, [f.name]);
+                    else
+                        alert('The file "'+f.name+'" is too big to be saved. Please wait being online!');
+                }
+            }
+        };
+
         // Function to get content of a xhr request with content-type "multipart"
         base.getMultipartContent = function(value, file) {
             var content = [], i = 0;
             $.each(value, function(k, v) {
-                content[i] = "--"+base.boundary+"\r\n";
-                content[i]+= "Content-Disposition: form-data; name='"+v.name+"'";
+                content[i] = '';
                 if(file) {
-                    content[i]+= "\r\n";
+                    for(var j = 0, l = v.length; j < l; j++) {
+                        content[i]+= base.getOneContent(k, v[j], true);
+                    }
                 }
                 else
-                    content[i]+= "\r\n";
-                content[i]+= "\r\n";
-                content[i]+= v.value+"\r\n";
+                    content[i]+= base.getOneContent(v.name, v);
                 ++i;
             });
 
             return content.join('');
+        };
+
+        base.getOneContent = function(inputName, v, file) {
+            content = "--"+base.boundary+"\r\n";
+            content+= "Content-Disposition: form-data; name='"+inputName+"';";
+            if(file) {
+                content+= " filename='"+v.name+"'\r\n";
+                if(v.type)
+                    content+= "Content-Type: "+v.type+"\r\n";
+            }
+            else
+                content+= "\r\n";
+            content+= "\r\n";
+            content+= v.value+"\r\n";
+
+            return content;
+        };
+
+        base.getTotalSize = function() {
+            var data = base.getOfflineData(true), totalSize = 0;
+            if(data[base.name] && data[base.name].files) {
+                $.each(data[base.name].files, function(i, v) {
+                    totalSize+= v.size;
+                });
+            }
+
+            return totalSize;
         };
 
         // Run initializer
