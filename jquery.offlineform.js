@@ -67,9 +67,25 @@
                 $.each(formulaire, function(i, v) {
                     // Send form to server
                     if(i == base.name) {
-                        $.ajax({type:base.method, url:base.action, data:v.value, error:function() {
-                            new_formulaire[i] = v;
-                        }});
+                        // Get the content of the request
+                        base.boundary = new Date().getTime();
+                        var content = base.getMultipartContent(v.value);
+                        // Check if this form has some files to upload
+                        if(v.files && v.files.length)
+                            content+= base.getMultipartContent(v.files, true);
+                        content+= "--"+base.boundary+"--\r\n";
+
+                        // Send the request
+                        $.ajax({
+                            type:base.method,
+                            url:base.action,
+                            data:content,
+                            contentType: "multipart/form-data; boundary="+base.boundary,
+                            error:function() {
+                                new_formulaire[i] = v;
+                            }
+                        });
+
                         // Retrieve and replace one last time data transmitted
                         base.handleOfflineData();
                         if(base.options.dataSubmittedEvent)
@@ -113,6 +129,25 @@
                 data = false;
 
             return data;
+        };
+
+        // Function to get content of a xhr request with content-type "multipart"
+        base.getMultipartContent = function(value, file) {
+            var content = [], i = 0;
+            $.each(value, function(k, v) {
+                content[i] = "--"+base.boundary+"\r\n";
+                content[i]+= "Content-Disposition: form-data; name='"+v.name+"'";
+                if(file) {
+                    content[i]+= "\r\n";
+                }
+                else
+                    content[i]+= "\r\n";
+                content[i]+= "\r\n";
+                content[i]+= v.value+"\r\n";
+                ++i;
+            });
+
+            return content.join('');
         };
 
         // Run initializer
