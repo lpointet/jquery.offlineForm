@@ -124,10 +124,10 @@
         base.handleOfflineData = function(){
             var ancien = base.getOfflineData();
             if(ancien && ancien[base.name]) {
-                // Handle checkbox => unchecked by default, if we find them in localStorage, we re-check them !
+                // Handle checkbox => unchecked by default, if we find them in localStorage, we re-check them!
                 if(base.checkbox.length)
                     base.checkbox.prop('checked', false);
-                // Handle multiselect => everything unselected by default, if we find them in localStorage, we re-select them !
+                // Handle multiselect => everything unselected by default, if we find them in localStorage, we re-select them!
                 if(base.multipleSelect.length)
                     base.multipleSelect.find('option').prop('selected', false);
                 var val = ancien[base.name].value;
@@ -145,9 +145,9 @@
                     else
                         input.val(v.value);
                 });
-                if(ancien[base.name].files && base.options.displayUploadedFilesEvent) {
+                // In case we have files uploaded, trigger event to display them
+                if(ancien[base.name].files && base.options.displayUploadedFilesEvent)
                     base.$el.trigger(base.options.displayUploadedFilesEvent, ancien[base.name].files);
-                }
             }
         };
 
@@ -167,11 +167,14 @@
         base.handleOfflineUpload = function(evt){
             if(base.fileSupport && !window.navigator.onLine) {
                 var old = base.getOfflineData(true), files = evt.target.files, input = $(this), inputName = input.attr('name');
+
+                // Initialize
                 if(!old[base.name])
                     old[base.name] = {'files': {}};
                 else if(!old[base.name].files)
                     old[base.name].files = {};
 
+                // Decrement totalSize => we upload new files, the old one are lost
                 if(base.tabSize[base.name])
                     base.totalSize-= base.tabSize[base.name];
                 base.tabSize[base.name] = 0;
@@ -184,15 +187,18 @@
                         // Closure to capture the file information.
                         reader.onload = (function(theFile, index) {
                             return function(e) {
+                                // Store file data
                                 old[base.name].files[inputName][index] = {
                                     'name': theFile.name,
                                     'type': theFile.type,
                                     'size': e.target.result.length,
                                     'value': (theFile.type.match('text') && e.target.result.match('^(?:[\x09\x0A\x0D\x20-\x7E]|[\xC2-\xDF][\x80-\xBF]|\xE0[\xA0-\xBF][\x80-\xBF]|[\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}|\xED[\x80-\x9F][\x80-\xBF]|\xF0[\x90-\xBF][\x80-\xBF]{2}|[\xF1-\xF3][\x80-\xBF]{3}|\xF4[\x80-\x8F][\x80-\xBF]{2})*$', 'g')?$.offlineForm.utf8_decode(e.target.result):e.target.result)
                                 };
+                                // Update sizes
                                 base.totalSize+= e.target.result.length;
                                 base.tabSize[base.name]+= e.target.result.length;
 
+                                // Save data in localStorage
                                 base.set_form_to_submit(old);
 
                                 /*
@@ -207,8 +213,11 @@
                                 }, 1000);
                             };
                         })(f, i);
+
+                        // Let's read it!
                         reader.readAsBinaryString(f);
                     }
+                    // The file's too big to be put in localStorage => display an error (custom or default)
                     else if(base.options.fileTooBigEvent)
                         base.$el.trigger(base.options.fileTooBigEvent, [f.name]);
                     else
@@ -235,20 +244,24 @@
             return content.join('');
         };
 
+        // Function to get one piece of content for an xhr request with content-type "multipart"
         base.getOneContent = function(inputName, v, file) {
+            // First, the boundary and content-disposition
             content = "--"+base.boundary+"\r\n";
             content+= "Content-Disposition: form-data; name='"+inputName+"';";
             var val = v.value;
+            // Filename and content-type if it's a file
             if(file) {
                 content+= " filename='"+v.name+"'\r\n";
                 if(v.type)
                     content+= "Content-Type: "+v.type+";\r\n";
                 if(!v.type.match('text'))
-                    val = 'base64,'+$.offlineForm.base64.encode(val);
+                    val = 'base64,'+$.offlineForm.base64.encode(val); // POST HTTP method requires UTF-8 => binary's not well uploaded :(
             }
             else
                 content+= "\r\n";
             content+= "\r\n";
+            // Then, the content
             content+= val+"\r\n";
 
             return content;
@@ -273,6 +286,7 @@
             }
         };
 
+        // Function to get size of files uploaded in localStorage
         base.getTotalSize = function() {
             var data = base.getOfflineData(true), totalSize = 0;
             if(data[base.name] && data[base.name].files) {
@@ -297,6 +311,9 @@
         * Events :
         *  - offlineSubmitEvent = triggered when the form is submitted while the user's offline
         *  - dataSubmittedEvent = triggered when the form is submitted once the user recovered a connection (from localStorage data)
+        *  - fileTooBigEvent = triggered when the file the user try to upload is too big to be in the localStorage
+        *  - displayUploadedFilesEvent = triggered when we need to display data from localStorage and we uploaded some files
+        *  - fileDeletedEvent = triggered when a file has been deleted
         */
         offlineSubmitEvent: null,
         dataSubmittedEvent: null,
