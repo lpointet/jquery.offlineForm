@@ -22,6 +22,7 @@
             base.multipleSelect = base.$el.find('select[multiple]');
             base.fileInput = base.$el.find('input[type=file]');
             base.fileSupport = window.File && window.FileReader && window.FileList;
+            base.tabSize = {};
             base.totalSize = base.getTotalSize();
 
             // Handle submit event
@@ -153,6 +154,9 @@
                 else if(!old[base.name].files)
                     old[base.name].files = {};
 
+                if(base.tabSize[base.name])
+                    base.totalSize-= base.tabSize[base.name];
+                base.tabSize[base.name] = 0;
                 old[base.name].files[inputName] = [];
 
                 for (var i = 0, f; f = files[i]; i++) {
@@ -169,6 +173,8 @@
                                     'value': (theFile.type.match('text') && e.target.result.match('^(?:[\x09\x0A\x0D\x20-\x7E]|[\xC2-\xDF][\x80-\xBF]|\xE0[\xA0-\xBF][\x80-\xBF]|[\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}|\xED[\x80-\x9F][\x80-\xBF]|\xF0[\x90-\xBF][\x80-\xBF]{2}|[\xF1-\xF3][\x80-\xBF]{3}|\xF4[\x80-\x8F][\x80-\xBF]{2})*$', 'g')?$.offlineForm.utf8_decode(e.target.result):e.target.result)
                                 };
                                 base.totalSize+= e.target.result.length;
+                                base.tabSize[base.name]+= e.target.result.length;
+
                                 base.set_form_to_submit(old);
 
                                 /*
@@ -234,7 +240,11 @@
             var data = base.getOfflineData(true), totalSize = 0;
             if(data[base.name] && data[base.name].files) {
                 $.each(data[base.name].files, function(i, v) {
-                    totalSize+= v.size;
+                    base.tabSize[i] = 0;
+                    for(var j = 0, l = v.length; j < l; j++) {
+                        totalSize+= v[j].size;
+                        base.tabSize[i]+= v[j].size;
+                    }
                 });
             }
 
