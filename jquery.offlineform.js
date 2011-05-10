@@ -11,6 +11,13 @@
         // Add a reverse reference to the DOM object
         base.$el.data("offlineForm", base);
 
+        /*
+        * Initialization function :
+        *  - get options
+        *  - initialize some needed core variables
+        *  - initialize some events
+        *  - then do the job
+        */
         base.init = function(){
             base.options = $.extend({},$.offlineForm.defaultOptions, options);
 
@@ -72,12 +79,15 @@
                         }});
                         // Retrieve and replace one last time data transmitted
                         base.handleOfflineData();
+
+                        // Trigger Event
                         if(base.options.dataSubmittedEvent)
                             base.$el.trigger(base.options.dataSubmittedEvent);
                     }
                     else
                         new_formulaire[i] = v;
                 });
+                // Replace the data with the new one (forms with error or other forms saved)
                 base.set_form_to_submit(new_formulaire);
             }
         };
@@ -86,17 +96,24 @@
         base.handleOfflineData = function(){
             var ancien = base.getOfflineData();
             if(ancien && ancien[base.name]) {
+                // Handle checkbox => unchecked by default, if we find them in localStorage, we re-check them !
                 if(base.checkbox.length)
                     base.checkbox.prop('checked', false);
+                // Handle multiselect => everything unselected by default, if we find them in localStorage, we re-select them !
                 if(base.multipleSelect.length)
                     base.multipleSelect.find('option').prop('selected', false);
                 var val = ancien[base.name].value;
                 $.each(val, function(i,v) {
+                    // Handle input names with "[]"
                     var cleanName = v.name.replace(/\]/g, "\\\]").replace(/\[/g, "\\\["), input = base.$el.find("[name="+cleanName+"]");
+
+                    // checked attribute
                     if(input.is(':checkbox') || input.is(':radio'))
                         base.$el.find('[name='+cleanName+'][value=' + v.value + ']').prop('checked', true);
+                    // selected attribute
                     else if(input.is('select') && input.prop('multiple'))
                         input.find('[value=' + v.value + ']').prop('selected', true);
+                    // others
                     else
                         input.val(v.value);
                 });
@@ -120,6 +137,11 @@
     };
 
     $.offlineForm.defaultOptions = {
+        /*
+        * Events :
+        *  - offlineSubmitEvent = triggered when the form is submitted while the user's offline
+        *  - dataSubmittedEvent = triggered when the form is submitted once the user recovered a connection (from localStorage data)
+        */
         offlineSubmitEvent: null,
         dataSubmittedEvent: null
     };
