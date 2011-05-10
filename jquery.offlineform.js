@@ -30,6 +30,7 @@
 
             // Handle upload input types
             base.fileInput.change(base.handleOfflineUpload);
+            base.$el.bind('deleteFile', base.deleteFile);
 
             // If we are online => submit registered values
             if(window.navigator.onLine)
@@ -236,6 +237,25 @@
             return content;
         };
 
+        // Function to delete a file from localStorage
+        base.deleteFile = function(e, inputName, index) {
+            var data = base.getOfflineData(true), new_data;
+            if(data[base.name] && data[base.name].files && data[base.name].files[inputName] && data[base.name].files[inputName][index]) {
+                // Do the suppression
+                var fin = data[base.name].files[inputName].slice(index+1, data[base.name].files[inputName].length);
+                data[base.name].files[inputName] = data[base.name].files[inputName].slice(0, index);
+                for(var le = data[base.name].files[inputName].length, i = le, l = fin.length+le; i < l; i++)
+                    data[base.name].files[inputName][i] = fin[i-le];
+
+                // Reassign form data to submit in localStorage
+                base.set_form_to_submit(data);
+
+                // Trigger event
+                if(base.options.fileDeletedEvent)
+                    base.$el.trigger(base.options.fileDeletedEvent, [inputName, index]);
+            }
+        };
+
         base.getTotalSize = function() {
             var data = base.getOfflineData(true), totalSize = 0;
             if(data[base.name] && data[base.name].files) {
@@ -259,7 +279,8 @@
         offlineSubmitEvent: null,
         dataSubmittedEvent: null,
         fileTooBigEvent: null,
-        displayUploadedFilesEvent: null
+        displayUploadedFilesEvent: null,
+        fileDeletedEvent: null
     };
 
     // Public method to decode UTF-8
