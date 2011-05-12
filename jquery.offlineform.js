@@ -122,32 +122,34 @@
 
         // Function to recover offline data (in case we are viewing a cached page)
         base.handleOfflineData = function(){
-            var ancien = base.getOfflineData();
-            if(ancien && ancien[base.name]) {
-                // Handle checkbox => unchecked by default, if we find them in localStorage, we re-check them!
-                if(base.checkbox.length)
-                    base.checkbox.prop('checked', false);
-                // Handle multiselect => everything unselected by default, if we find them in localStorage, we re-select them!
-                if(base.multipleSelect.length)
-                    base.multipleSelect.find('option').prop('selected', false);
-                var val = ancien[base.name].value;
-                $.each(val, function(i,v) {
-                    // Handle input names with "[]"
-                    var cleanName = v.name.replace(/\]/g, "\\\]").replace(/\[/g, "\\\["), input = base.$el.find("[name="+cleanName+"]");
+            if(base.options.reFill) {
+                var ancien = base.getOfflineData();
+                if(ancien && ancien[base.name]) {
+                    // Handle checkbox => unchecked by default, if we find them in localStorage, we re-check them!
+                    if(base.checkbox.length)
+                        base.checkbox.prop('checked', false);
+                    // Handle multiselect => everything unselected by default, if we find them in localStorage, we re-select them!
+                    if(base.multipleSelect.length)
+                        base.multipleSelect.find('option').prop('selected', false);
+                    var val = ancien[base.name].value;
+                    $.each(val, function(i,v) {
+                        // Handle input names with "[]"
+                        var cleanName = v.name.replace(/\]/g, "\\\]").replace(/\[/g, "\\\["), input = base.$el.find("[name="+cleanName+"]");
 
-                    // checked attribute
-                    if(input.is(':checkbox') || input.is(':radio'))
-                        base.$el.find('[name='+cleanName+'][value=' + v.value + ']').prop('checked', true);
-                    // selected attribute
-                    else if(input.is('select') && input.prop('multiple'))
-                        input.find('[value=' + v.value + ']').prop('selected', true);
-                    // others
-                    else
-                        input.val(v.value);
-                });
-                // In case we have files uploaded, trigger event to display them
-                if(ancien[base.name].files && base.options.displayUploadedFilesEvent)
-                    base.$el.trigger(base.options.displayUploadedFilesEvent, ancien[base.name].files);
+                        // checked attribute
+                        if(input.is(':checkbox') || input.is(':radio'))
+                            base.$el.find('[name='+cleanName+'][value=' + v.value + ']').prop('checked', true);
+                        // selected attribute
+                        else if(input.is('select') && input.prop('multiple'))
+                            input.find('[value=' + v.value + ']').prop('selected', true);
+                        // others
+                        else
+                            input.val(v.value);
+                    });
+                    // In case we have files uploaded, trigger event to display them
+                    if(ancien[base.name].files && base.options.displayUploadedFilesEvent)
+                        base.$el.trigger(base.options.displayUploadedFilesEvent, ancien[base.name].files);
+                }
             }
         };
 
@@ -307,6 +309,11 @@
     };
 
     $.offlineForm.defaultOptions = {
+        /*
+        * General options :
+        *  - reFill = display data previously submitted when form is displayed ?
+        */
+        reFill: true,
         /*
         * Events :
         *  - offlineSubmitEvent = triggered when the form is submitted while the user's offline
