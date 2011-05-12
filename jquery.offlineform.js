@@ -127,10 +127,10 @@
                 if(ancien && ancien[base.name]) {
                     // Handle checkbox => unchecked by default, if we find them in localStorage, we re-check them!
                     if(base.checkbox.length)
-                        base.checkbox.prop('checked', false);
+                        base.checkbox.attr('checked', false);
                     // Handle multiselect => everything unselected by default, if we find them in localStorage, we re-select them!
                     if(base.multipleSelect.length)
-                        base.multipleSelect.find('option').prop('selected', false);
+                        base.multipleSelect.find('option').attr('selected', false);
                     var val = ancien[base.name].value;
                     $.each(val, function(i,v) {
                         // Handle input names with "[]"
@@ -138,10 +138,10 @@
 
                         // checked attribute
                         if(input.is(':checkbox') || input.is(':radio'))
-                            base.$el.find('[name='+cleanName+'][value=' + v.value + ']').prop('checked', true);
+                            base.$el.find('[name='+cleanName+'][value=' + v.value + ']').attr('checked', true);
                         // selected attribute
-                        else if(input.is('select') && input.prop('multiple'))
-                            input.find('[value=' + v.value + ']').prop('selected', true);
+                        else if(input.is('select') && input.attr('multiple'))
+                            input.find('[value=' + v.value + ']').attr('selected', true);
                         // others
                         else
                             input.val(v.value);
