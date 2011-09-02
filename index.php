@@ -50,7 +50,7 @@ $data_double = array(
 if(file_exists(CFG_FILE)) {
     $file = file(CFG_FILE);
     foreach($file as $ligne) {
-        $ligne = trim($ligne);
+        // $ligne = trim($ligne);
         $tmp = explode(CFG_SEP, $ligne);
         $tmp[1] = preg_replace('/<br(\s)*(\/)?>/', "\n", $tmp[1]);
         $r = strpos($tmp[1], 'ARRAY:');
@@ -81,7 +81,7 @@ if(file_exists(CFG_FILE_DOUBLE)) {
 <script>
 $(function() {
     var webappCache = window.applicationCache, body = $('body');
-    $.offlineForm.defaultOptions = {
+    var options = {
         dataSubmittedEvent: 'dataSubmitted',
         offlineSubmitEvent: 'formValidated',
         fileTooBigEvent: 'fileTooBig',
@@ -120,7 +120,7 @@ $(function() {
             this_form.find('a[data-inputname='+inputName+'][data-index='+index+']').closest('div').remove();
             this_form.find('[name='+inputName+']').show();
         }
-    }).offlineForm();
+    }).offlineForm(options);
     webappCache.update();
 
     function deleteFile(e) {
