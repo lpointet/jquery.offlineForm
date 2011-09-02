@@ -88,32 +88,38 @@ $(function() {
         displayUploadedFilesEvent: 'displayUploadedFiles',
         fileDeletedEvent: 'fileDeleted'
     };
-    $('form').bind('dataSubmitted', function(e) {
-        webappCache.update();
-        alert('Data submitted !');
-    }).bind('formValidated', function(e) {
-        alert('Data stored !');
-    }).bind('fileTooBig', function(e, filename) {
-        alert(filename + "is too big wooooo!!!!");
-    }).bind('displayUploadedFiles', function(e, files) {
-        var this_form = $(this);
-        $.each(files, function(i, v) {
-            var l = v.length, cleanName = i.replace(/\]/g, "\\\]").replace(/\[/g, "\\\[");
-            if(l) {
-                this_form.find('[name='+cleanName+']').hide();
-                for(var j = 0; j < l; j++) {
-                    if(v[j].type.match('image.*')) {
-                        var div = $('<div><img width="200px" src="data:'+v[j].type+';base64,'+$.offlineForm.base64.encode(v[j].value)+'" alt="test"/></div>');
-                        div.append($('<a data-inputname="'+i+'" data-index="'+j+'" href="#">Suppr</a>').click(deleteFile));
-                        this_form.append(div);
+    $('form').bind({
+        'dataSubmitted': function(e) {
+            webappCache.update();
+            alert('Data submitted !');
+        },
+        'formValidated': function(e) {
+            alert('Data stored !');
+        },
+        'fileTooBig': function(e, filename) {
+            alert(filename + "is too big wooooo!!!!");
+        },
+        'displayUploadedFiles': function(e, files) {
+            var this_form = $(this);
+            $.each(files, function(i, v) {
+                var l = v.length, cleanName = i.replace(/\]/g, "\\\]").replace(/\[/g, "\\\[");
+                if(l) {
+                    this_form.find('[name='+cleanName+']').hide();
+                    for(var j = 0; j < l; j++) {
+                        if(v[j].type.match('image.*')) {
+                            var div = $('<div><img width="200px" src="data:'+v[j].type+';base64,'+$.offlineForm.base64.encode(v[j].value)+'" alt="test"/></div>');
+                            div.append($('<a data-inputname="'+i+'" data-index="'+j+'" href="#">Suppr</a>').click(deleteFile));
+                            this_form.append(div);
+                        }
                     }
                 }
-            }
-        });
-    }).bind('fileDeleted', function(e, inputName, index) {
-        var this_form = $(this), inputName = inputName.replace(/\]/g, "\\\]").replace(/\[/g, "\\\[");
-        this_form.find('a[data-inputname='+inputName+'][data-index='+index+']').closest('div').remove();
-        this_form.find('[name='+inputName+']').show();
+            });
+        },
+        'fileDeleted': function(e, inputName, index) {
+            var this_form = $(this), inputName = inputName.replace(/\]/g, "\\\]").replace(/\[/g, "\\\[");
+            this_form.find('a[data-inputname='+inputName+'][data-index='+index+']').closest('div').remove();
+            this_form.find('[name='+inputName+']').show();
+        }
     }).offlineForm();
     webappCache.update();
 
