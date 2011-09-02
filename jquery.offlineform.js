@@ -21,7 +21,7 @@
         base.init = function(){
             base.options = $.extend({},$.offlineForm.defaultOptions, options);
 
-            base.name = base.$el.id;
+            base.name = base.el.id;
             base.action = base.$el.attr("action") || window.location.href;
             base.method = base.$el.attr("method") || "post";
             base.document = $(document);
