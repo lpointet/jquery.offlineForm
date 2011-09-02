@@ -21,7 +21,7 @@
         base.init = function(){
             base.options = $.extend({},$.offlineForm.defaultOptions, options);
 
-            base.name = base.$el.attr("id");
+            base.name = base.$el.id;
             base.action = base.$el.attr("action") || window.location.href;
             base.method = base.$el.attr("method") || "post";
             base.document = $(document);
@@ -36,8 +36,10 @@
             base.$el.submit(base.handleOfflineForm);
 
             // Handle upload input types
-            base.fileInput.change(base.handleOfflineUpload);
-            base.$el.bind('deleteFile', base.deleteFile);
+            if(base.fileInput.length) {
+                base.fileInput.change(base.handleOfflineUpload);
+                base.$el.bind('deleteFile', base.deleteFile);
+            }
 
             // If we are online => submit registered values
             if(window.navigator.onLine)
